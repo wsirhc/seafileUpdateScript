@@ -1,4 +1,5 @@
 #!/bin/bash
+#Usage of this script: ./seafileUpdate.sh https://path-to-new-package.tar.gz
 #exit on any error
 	set -e
 
