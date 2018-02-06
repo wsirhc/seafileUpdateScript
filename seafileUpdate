@@ -1,0 +1,63 @@
+#!/bin/bash
+#exit on any error
+	set -e
+
+#set initial path
+	workingDir="/home/seafile"
+	dlURL=$1
+	dlFileName=``
+	runUpgrade=``
+	cd $workingDir
+
+#shutdown seafile-process
+$workingDir/seafile-server-latest/seafile.sh stop
+$workingDir/seafile-server-latest/seahub.sh stop
+
+
+#echo "Seafile will be shut down"
+	echo "File Downloading"
+
+#download file
+	if ! wget -o /dev/null $dlURL; then
+		echo 'Could not download file!'
+		exit 1
+	fi
+		dlFileName=`ls -t1 $workingDir | grep tar.gz | head -n1`
+		echo "File $dlFileName has been downloaded"
+
+#extract file
+	echo "extract file $dlFileName"	
+	tar -xzf "$dlFileName"
+	
+#get into upgrade-folder
+	seafDir=`ls -1t --g | grep seafile-server | head -1`
+
+	echo "get into $seafDir/upgrade"
+	cd $seafDir/upgrade
+
+	PS3='Please select the appropriate From... To... Upgradescript:'
+	QUIT="Quit_runUpdate.sh"
+	touch "$QUIT"
+
+#get list of upgradescripts and offer list
+	select upgradeScript in *upgrade*.sh;
+	do
+  		case $upgradeScript in
+			"$QUIT")
+			echo "Exiting."
+			break
+			;;
+			*)
+			echo "You picked $upgradeScript ($REPLY)"
+
+			#run upgradescript
+			./$upgradeScript
+			break
+			;;
+		esac
+	done
+	rm "$QUIT"
+	cd ~
+
+$workingDir/seafile-server-latest/seafile.sh start
+$workingDir/seafile-server-latest/seahub.sh start
